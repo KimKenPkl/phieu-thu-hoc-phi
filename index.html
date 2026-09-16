@@ -74,6 +74,10 @@
   .zalo-box{background:#e5f6ff;border:1px solid #bfe6fb;border-radius:12px;padding:12px;font-size:13.5px;white-space:pre-wrap;line-height:1.6}
   .hint{font-size:12.5px;color:var(--muted);line-height:1.6}
   .badge{display:inline-block;background:var(--primary);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:2px 9px}
+  .phone-chip{display:inline-block;background:#e0f2e9;color:#166534;font-weight:700;font-size:11.5px;border-radius:6px;padding:1px 7px;margin-left:4px;white-space:nowrap}
+  .zalo-mini{display:inline-block;background:#0068ff;color:#fff !important;font-weight:700;font-size:11px;border-radius:6px;padding:2px 8px;margin-left:4px;text-decoration:none;white-space:nowrap}
+  .zalo-mini:hover{background:#0052cc}
+  .phone-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13.5px}
   .progress{height:8px;background:#e2e8f0;border-radius:6px;overflow:hidden;margin-top:8px;display:none}
   .progress div{height:100%;background:var(--success);width:0%}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:18px}
@@ -113,6 +117,10 @@
         <input type="file" id="fileInput" accept=".xlsx,.xls">
       </div>
       <div id="fileInfo" class="hint" style="margin-top:8px">Chưa có file. Bấm “Dùng dữ liệu mẫu” để thử.</div>
+      <div class="dropzone" id="dropzone2" style="margin-top:8px;padding:12px;border-color:var(--success)">
+        <div style="font-weight:700">📞 Nạp thêm file SĐT phụ huynh</div>
+        <div class="hint">VD: danh sách hỗ trợ học phí (có cột Số điện thoại) — web tự gắn SĐT theo tên HS</div>
+      </div>
       <div class="btn-row">
         <button class="btn btn-outline btn-sm" id="btnSample">✨ Dùng dữ liệu mẫu (tháng 9)</button>
       </div>
@@ -171,8 +179,11 @@
         <button class="btn btn-primary btn-sm" id="btnPrintOne">🖨️ In phiếu này</button>
         <button class="btn btn-success btn-sm" id="btnPngOne">🖼️ Tải ảnh phiếu này</button>
         <button class="btn btn-outline btn-sm" id="btnCopyZalo">📋 Copy tin nhắn Zalo</button>
+        <button class="btn btn-outline btn-sm" id="btnCopyPhone">📋 Copy SĐT</button>
+        <a class="btn btn-outline btn-sm" id="btnOpenZalo" href="#" target="_blank" rel="noopener" style="background:#0068ff;color:#fff;border-color:#0068ff">💬 Mở chat Zalo</a>
+        <button class="btn btn-success btn-sm" id="btnSendOne">📤 Gửi em này (1 chạm)</button>
       </div>
-      <div class="hint">💡 Bấm trực tiếp vào <b>số tiền / họ tên / lý do / đã đóng</b> trên phiếu để sửa nhanh. Tổng &amp; Còn thiếu &amp; Số tiền bằng chữ tự tính lại. Dấu ⚠ là Tổng trong file lệch với cộng các khoản.</div>
+      <div class="hint">💡 <b>Gửi nhanh nhất:</b> bấm <b>“📤 Gửi em này (1 chạm)”</b> — ảnh tự tải về + tin nhắn tự copy + chat Zalo tự mở, thầy/cô chỉ dán tin nhắn rồi đính kèm ảnh. Dùng Zalo trên máy tính thì bấm <b>“🖼️ Copy ảnh”</b> rồi dán thẳng vào khung chat.<br>✏️ Bấm trực tiếp vào <b>số tiền / họ tên / lý do / đã đóng</b> trên phiếu để sửa nhanh. Dấu ⚠ là Tổng trong file lệch với cộng các khoản.</div>
     </div>
 
     <div class="phieu-wrap no-print">
@@ -181,9 +192,17 @@
 
     <div class="card no-print">
       <h3>💬 6. Tin nhắn Zalo gửi riêng phụ huynh (xem trước)</h3>
-      <div class="zalo-box" id="zaloPreview">—</div>
+      <div class="phone-row">
+        <span>📞 SĐT PH <b id="phParName"></b>:</span>
+        <input type="text" id="phoneInput" placeholder="Chưa có — nhập tay…" style="max-width:170px">
+        <button class="btn btn-outline btn-sm" id="btnCopyPhone2">Copy</button>
+        <a class="btn btn-sm" id="btnOpenZalo2" href="#" target="_blank" rel="noopener" style="background:#0068ff;color:#fff">💬 Mở chat Zalo</a>
+        <span class="hint" id="phoneHint"></span>
+      </div>
+      <div class="zalo-box" id="zaloPreview" style="margin-top:8px">—</div>
       <div class="btn-row">
         <button class="btn btn-primary btn-sm" id="btnCopyZalo2">📋 Copy tin nhắn</button>
+        <button class="btn btn-outline btn-sm" id="btnCopyImg">🖼️ Copy ảnh phiếu (dán vào Zalo Web)</button>
       </div>
       <label class="f">Mẫu tin nhắn (giữ các {…} để tự điền)</label>
       <textarea id="zaloTemplate" rows="6">Kính gửi Quý phụ huynh em {ten} – Lớp {lop}!
@@ -212,7 +231,7 @@ Kính mong Quý phụ huynh hoàn thành giúp nhà trường. Trân trọng c�
 </div>
 
 <div id="print-area"></div>
-<footer><span id="verFoot">v2.1 • Năm học 2026–2027</span> — Dữ liệu chỉ xử lý trên máy, không gửi đi đâu.</footer>
+<footer><span id="verFoot">v2.2 • Năm học 2026–2027</span> — Dữ liệu chỉ xử lý trên máy, không gửi đi đâu.</footer>
 
 <script>
 /* ================= STATE ================= */
@@ -239,6 +258,19 @@ function fmt(v){ let n=num(v); return n? n.toLocaleString("vi-VN") : "-"; }
 function fmtSigned(v){ let n=num(v); if(!n) return "-"; return n<0? "Thừa "+Math.abs(n).toLocaleString("vi-VN") : n.toLocaleString("vi-VN"); }
 function fmtZalo(v){ let n=num(v); return n? n.toLocaleString("vi-VN")+"đ" : "0đ"; }
 function esc(s){ return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function normKey(s){
+  return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/\s+/g," ").trim();
+}
+function normPhone(v){
+  if(v===null||v===undefined) return "";
+  if(typeof v==="number") v=isFinite(v)?String(Math.round(v)):"";
+  let d=String(v).replace(/\D/g,"");
+  if(!d) return "";
+  if(d.startsWith("84")&&(d.length===11||d.length===12)) d="0"+d.slice(2);
+  else if(d.length===9&&/^[35789]/.test(d)) d="0"+d;
+  return /^0\d{9}$/.test(d)?d:"";
+}
+function zaloLink(s){ return (s&&s.sdt)?`https://zalo.me/${s.sdt}`:""; }
 
 const CHU=["không","một","hai","ba","bốn","năm","sáu","bảy","tám","chín"];
 function doc3(n, full){
@@ -309,7 +341,7 @@ function findHeaderRow(rows){
     if(line.some(x=>x.includes("tổng")||x.includes("phải thu"))) score+=1;
     if(score>bestScore){ bestScore=score; best=r; }
   }
-  return bestScore>=5?best:-1;
+  return bestScore>=7?best:-1;
 }
 function mapColumns(header){
   let H=header.map(normH);
@@ -365,14 +397,17 @@ function parseRows(rows){
   let hr=findHeaderRow(rows);
   if(hr<0) throw new Error("Không tìm thấy dòng tiêu đề (STT – HỌ – TÊN – Học phí). Hãy dùng đúng form nhà trường.");
   let c=mapColumns(rows[hr]);
-  let out=[];
+  let out=[], skipped=[];
   for(let r=hr+1;r<rows.length;r++){
     let row=rows[r]; if(!row) continue;
     let ho=String(row[c.ho]??"").trim(), ten=String(row[c.ten]??"").trim();
     if(!ho&&!ten) continue;
-    let stt=parseSTT(row[c.stt]); if(stt===null) continue;
+    let stt=parseSTT(row[c.stt]);
+    let full=(ho+" "+ten).replace(/\s+/g," ").trim();
+    if(stt===null){ skipped.push(full); continue; }
     let nd=String(row[c.noidung]??"").trim();
     let s={stt, ho, ten, fullName:(ho+" "+ten).replace(/\s+/g," ").trim(),
+      sdt:"", tenPH:"",
       noidung:nd, hocphi:num(row[c.hocphi]), tienan:num(row[c.tienan]), tieno:num(row[c.tieno]),
       ansang:num(row[c.ansang]), anchieu:num(row[c.anchieu]),
       busSC:num(row[c.busSC]), busST:num(row[c.busST]), busSCT:num(row[c.busSCT]), busCuoiTuan:num(row[c.busCuoi]),
@@ -386,11 +421,11 @@ function parseRows(rows){
     if(!s.tong && sum) s.tong=sum;                    // thiếu tổng → tự cộng
     s.lech=(s.tong&&sum&&s.tong!==sum)? s.tong-sum : 0; // lệch → cảnh báo
     if(!s.tong && !s.noidung.replace(lyDoMacDinh(),"")){ /* giữ */ }
-    if(s.tong===0 && sum===0 && String(row[c.noidung]??"").trim()==="") continue; // dòng trống
+    if(s.tong===0 && sum===0 && String(row[c.noidung]??"").trim()===""){ skipped.push(s.fullName); continue; } // dòng trống
     out.push(s);
   }
   out.sort((a,b)=>a.stt-b.stt);
-  return {list:out, meta:{thang:detectThang(rows,c)}};
+  return {list:out, skipped, meta:{thang:detectThang(rows,c)}};
 }
 function loadWorkbook(wb, fname){
   let parsed=null, target="";
@@ -401,6 +436,7 @@ function loadWorkbook(wb, fname){
   }
   if(!parsed) throw new Error("Không đọc được danh sách HS. File cần có các cột STT, HỌ, TÊN, Học phí…");
   students=parsed.list; curIndex=0;
+  window._skippedNames=parsed.skipped||[];
   let ws0=wb.Sheets[wb.SheetNames[0]];
   let a1=String(ws0["A1"]?ws0["A1"].v:"");
   let m=a1.match(/\d{1,2}A\d+/i);
@@ -411,6 +447,91 @@ function loadWorkbook(wb, fname){
   $("fileInfo").innerHTML=`✅ <b>${esc(fname)}</b> — sheet <b>${esc(target)}</b> — <b>${students.length}</b> HS`
     + (parsed.meta.thang?` — tháng <b>${parsed.meta.thang}</b> (tự nhận)`:"")
     + (lechN?` — ⚠ <b>${lechN}</b> em lệch tổng, cần kiểm tra`:"");
+}
+
+/* ================= FILE SĐT PHỤ HUYNH ================= */
+function detectFileType(rows){
+  if(findHeaderRow(rows)>=0) return "tuition";
+  for(let r=0;r<Math.min(rows.length,15);r++){
+    if(rows[r].map(normH).some(x=>/số điện thoại|sđt|sdt|điện thoại|phone|zalo/.test(x))) return "phonebook";
+  }
+  return "unknown";
+}
+function parsePhonebook(rows){
+  let hr=-1, H=null;
+  for(let r=0;r<Math.min(rows.length,15);r++){
+    let line=rows[r].map(normH);
+    if(line.some(x=>/số điện thoại|sđt|sdt|điện thoại|phone|zalo/.test(x))){ hr=r; H=line; break; }
+  }
+  if(hr<0) throw new Error("Không thấy cột Số điện thoại trong file.");
+  let idx=pred=>H.findIndex(pred);
+  let cStt=idx(x=>x==="stt"||x.startsWith("stt"));
+  let cFull=idx(x=>x.includes("tên học sinh")||x.includes("họ tên")||x==="họ và tên");
+  let cHo=idx(x=>x==="họ"||x.startsWith("họ "));
+  let cTen=idx(x=>x==="tên");
+  let cPhone=idx(x=>/số điện thoại|sđt|sdt|điện thoại|phone|zalo/.test(x));
+  let cPH=idx(x=>x.includes("cha")||x.includes("mẹ")||x.includes("giám hộ")||x.includes("phụ huynh"));
+  if(cStt<0) cStt=0;
+  let out=[];
+  for(let r=hr+1;r<rows.length;r++){
+    let row=rows[r]; if(!row) continue;
+    let stt=parseSTT(row[cStt]); if(stt===null) continue; // bỏ tiêu đề, dòng cộng, phụ lục
+    let name=cFull>=0?String(row[cFull]??"").trim():(String(row[cHo]??"").trim()+" "+String(row[cTen]??"").trim()).trim();
+    if(!name) continue;
+    let raw=cPhone>=0?row[cPhone]:"";
+    out.push({name, ph:cPH>=0?String(row[cPH]??"").trim():"", raw, sdt:normPhone(raw)});
+  }
+  return out;
+}
+function mergePhones(entries, fname){
+  if(!students.length){ $("fileInfo").innerHTML="❌ Hãy nạp <b>file học phí</b> trước, rồi mới nạp file SĐT."; return {matched:0}; }
+  let map={}; students.forEach(s=>map[normKey(s.fullName)]=s);
+  let skip={}; (window._skippedNames||[]).forEach(n=>skip[normKey(n)]=1);
+  let matched=0, badPhone=[], unmatched=[], matchedSkipped=[];
+  entries.forEach(e=>{
+    let k=normKey(e.name);
+    if(map[k]){
+      map[k].sdt=e.sdt; map[k].tenPH=e.ph; matched++;
+      if(e.raw!==""&&e.raw!==null&&e.raw!==undefined&&!e.sdt) badPhone.push(`${e.name} (${e.raw})`);
+    }
+    else if(skip[k]) matchedSkipped.push(e.name);
+    else unmatched.push(e.name);
+  });
+  renderList(); renderPhieu();
+  let noPhone=students.filter(s=>!s.sdt).length;
+  $("fileInfo").innerHTML=`📞 <b>${esc(fname)}</b>: gắn SĐT cho <b>${matched}/${students.length}</b> em`
+    +(badPhone.length?` — ⚠ ${badPhone.length} SĐT chưa chuẩn: ${esc(badPhone.slice(0,3).join("; "))}${badPhone.length>3?"…":""}`:"")
+    +(matchedSkipped.length?` — ${matchedSkipped.length} tên khớp dòng trống file thu: ${esc(matchedSkipped.join("; "))}`:"")
+    +(unmatched.length?` — ${unmatched.length} tên không có trong DS thu <details><summary>Xem danh sách</summary>${esc(unmatched.join("; "))}</details>`:"")
+    +`<br>Còn <b>${noPhone}</b> em chưa có SĐT — bấm tên em rồi nhập tay ở mục 6.`;
+  return {matched, unmatched, badPhone};
+}
+function handleFile(f){
+  $("fileInfo").textContent="⏳ Đang đọc "+f.name+" …";
+  let rd=new FileReader();
+  rd.onload=e=>{
+    try{
+      let wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+      let type="unknown";
+      for(let name of wb.SheetNames){
+        let rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:"",raw:true});
+        let t=detectFileType(rows);
+        if(t!=="unknown"){ type=t; break; }
+      }
+      if(type==="tuition") loadWorkbook(wb,f.name);
+      else if(type==="phonebook"){
+        let entries=[];
+        wb.SheetNames.forEach(name=>{
+          let rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:"",raw:true});
+          try{ entries=entries.concat(parsePhonebook(rows)); }catch(err){}
+        });
+        if(!entries.length) throw new Error("File SĐT không có dòng học sinh nào (cần cột STT + Tên + Số điện thoại).");
+        mergePhones(entries,f.name);
+      }
+      else throw new Error("Không nhận dạng được file (cần file học phí hoặc file có cột Số điện thoại).");
+    }catch(err){ $("fileInfo").innerHTML="❌ <b>"+esc(err.message)+"</b>"; }
+  };
+  rd.readAsArrayBuffer(f);
 }
 
 /* ================= DANH SÁCH ================= */
@@ -424,12 +545,13 @@ function renderList(){
     <div class="st-item ${i===curIndex?"active":""}" data-i="${i}">
       <input type="checkbox" data-chk="${i}" ${s.selected?"checked":""} title="Chọn để in/tải hàng loạt">
       <span class="stt">${s.stt}</span>
-      <span class="name"><b>${esc(s.fullName)}</b><br><span class="hint">${s.lech?`<span class="warn-tag">⚠ lệch ${fmtSigned(s.lech)}</span> • `:""}${esc(s.noidung.slice(0,42))}</span></span>
+      <span class="name"><b>${esc(s.fullName)}</b><br><span class="hint">${s.lech?`<span class="warn-tag">⚠ lệch ${fmtSigned(s.lech)}</span> • `:""}${s.sdt?`<span class="phone-chip">📞 ${esc(s.sdt)}</span><a class="zalo-mini" href="https://zalo.me/${s.sdt}" target="_blank" rel="noopener">Zalo ↗</a>`:`<span class="warn-tag">chưa có SĐT</span> • `}${esc(s.noidung.slice(0,30))}</span></span>
       <span class="money">${fmt(s.tong)}</span>
     </div>`).join("") : `<div class="hint" style="padding:12px">Không tìm thấy.</div>`;
   list.querySelectorAll(".st-item").forEach(el=>{
     el.addEventListener("click",e=>{
       if(e.target.matches("input[type=checkbox]")) return;
+      if(e.target.closest("a")) return; // bấm link Zalo thì mở chat, không đổi em đang xem
       curIndex=parseInt(el.dataset.i,10); renderList(); renderPhieu();
     });
   });
@@ -508,11 +630,51 @@ function zaloText(s){
     .replaceAll("{lydo}",s.noidung).replaceAll("{tong}",fmtZalo(s.tong))
     .replaceAll("{bangchu}",soThanhChu(s.tong)).replaceAll("{chitiet}",chiTietZalo(s)).replaceAll("{ngay}",ngay.short);
 }
-function renderZalo(){ let s=cur(); if(s) $("zaloPreview").textContent=zaloText(s); }
+function renderZalo(){
+  let s=cur(); if(!s) return;
+  $("zaloPreview").textContent=zaloText(s);
+  if(document.activeElement!==$("phoneInput")) $("phoneInput").value=s.sdt||"";
+  $("phParName").textContent=s.tenPH?`(${s.tenPH})`:"";
+  let link=zaloLink(s);
+  ["btnOpenZalo","btnOpenZalo2"].forEach(id=>{
+    let a=$(id);
+    if(link){ a.href=link; a.style.opacity="1"; a.style.pointerEvents="auto"; }
+    else{ a.href="#"; a.style.opacity=".45"; a.style.pointerEvents="none"; }
+  });
+  $("phoneHint").textContent=s.sdt?"":"Chưa có SĐT — nhập tay hoặc nạp file SĐT.";
+}
 async function copyText(t){
   try{ await navigator.clipboard.writeText(t); return true; }
   catch(e){ let ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select();
     try{ document.execCommand("copy"); return true; }catch(_){ return false; } finally{ ta.remove(); } }
+}
+async function renderPhieuCanvas(){
+  await document.fonts.ready;
+  return await html2canvas($("phieuPreview"),{scale:2,backgroundColor:"#ffffff",useCORS:true});
+}
+/* Gửi 1 chạm: tải ảnh + copy tin nhắn + mở đúng chat Zalo PH */
+async function guiEmNay(){
+  let s=cur(); if(!s) return;
+  $("zipStatus").textContent="⏳ Đang chuẩn bị gửi…";
+  try{
+    let canvas=await renderPhieuCanvas();
+    let a=document.createElement("a"); a.download=fileNameFor(s); a.href=canvas.toDataURL("image/png"); a.click();
+  }catch(e){ $("zipStatus").textContent="❌ Không tạo được ảnh (cần mạng lần đầu)."; return; }
+  let ok=await copyText(zaloText(s));
+  let link=zaloLink(s);
+  if(link){ window.open(link,"_blank"); }
+  $("zipStatus").textContent=ok
+    ? `✅ Xong em ${s.fullName}: ảnh đã tải về + tin nhắn đã copy${link?" + đã mở chat Zalo":""}. Trong chat: dán tin nhắn (Ctrl+V) rồi đính kèm ảnh vừa tải.`
+    : `⚠ Ảnh đã tải về nhưng chưa copy được tin nhắn — hãy bấm Copy tin nhắn.`;
+}
+async function copyPhieuImage(){
+  let s=cur(); if(!s) return;
+  try{
+    let canvas=await renderPhieuCanvas();
+    let blob=await new Promise(r=>canvas.toBlob(r,"image/png"));
+    await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);
+    $("zipStatus").textContent=`✅ Đã copy ảnh phiếu em ${s.fullName} — mở Zalo Web, bấm vào chat và dán (Ctrl+V).`;
+  }catch(e){ $("zipStatus").textContent="❌ Trình duyệt này không cho copy ảnh (hãy dùng Chrome/Edge + mở web bằng https)."; }
 }
 
 /* ================= IN ================= */
@@ -577,11 +739,11 @@ async function zipAll(){
 function exportExcel(){
   let list=selectedList();
   if(!list.length||typeof XLSX==="undefined"){ alert("Chưa có dữ liệu hoặc chưa tải thư viện Excel."); return; }
-  let rows=list.map(s=>({"STT":s.stt,"Họ và tên":s.fullName,"Lý do":s.noidung,"Tổng tiền":num(s.tong),
+  let rows=list.map(s=>({"STT":s.stt,"Họ và tên":s.fullName,"Phụ huynh":s.tenPH||"","SĐT PH":s.sdt||"","Link Zalo":zaloLink(s),"Lý do":s.noidung,"Tổng tiền":num(s.tong),
     "Đã đóng":num(s.daDong),"Còn thiếu":num(s.tong)-num(s.daDong),"File ảnh gợi ý":fileNameFor(s),
     "Tin nhắn Zalo":zaloText(s),"Đã gửi (đánh x)":"","Ghi chú":s.ghiChu||""}));
   let ws=XLSX.utils.json_to_sheet(rows);
-  ws["!cols"]=[{wch:6},{wch:22},{wch:55},{wch:14},{wch:12},{wch:12},{wch:34},{wch:80},{wch:13},{wch:16}];
+  ws["!cols"]=[{wch:6},{wch:22},{wch:20},{wch:13},{wch:26},{wch:55},{wch:14},{wch:12},{wch:12},{wch:34},{wch:80},{wch:13},{wch:16}];
   let wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,"Theo doi gui PH");
   XLSX.writeFile(wb,`TheoDoi-Gui-PH-${$("cfgLop").value}-T${$("cfgThang").value.replace("/","-")}.xlsx`);
@@ -602,12 +764,17 @@ function loadCfg(){
 
 /* ================= SỰ KIỆN ================= */
 function bindEvents(){
-  let dz=$("dropzone"), fi=$("fileInput");
-  dz.addEventListener("click",()=>fi.click());
-  fi.addEventListener("change",()=>{ if(fi.files[0]) readFile(fi.files[0]); });
-  ["dragover","dragenter"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add("dragover");}));
-  ["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove("dragover");}));
-  dz.addEventListener("drop",e=>{ let f=e.dataTransfer.files[0]; if(f) readFile(f); });
+  let dz=$("dropzone"), dz2=$("dropzone2"), fi=$("fileInput");
+  let pick=()=>fi.click();
+  dz.addEventListener("click",pick);
+  if(dz2) dz2.addEventListener("click",pick);
+  fi.addEventListener("change",()=>{ if(fi.files[0]) handleFile(fi.files[0]); fi.value=""; });
+  [dz,dz2].forEach(d=>{
+    if(!d) return;
+    ["dragover","dragenter"].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.add("dragover");}));
+    ["dragleave","drop"].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.remove("dragover");}));
+    d.addEventListener("drop",e=>{ let f=e.dataTransfer.files[0]; if(f) handleFile(f); });
+  });
   $("btnSample").addEventListener("click",()=>{
     students=SAMPLE.map(s=>({...s})); curIndex=0;
     $("fileInfo").innerHTML=`✨ Đang xem <b>dữ liệu mẫu tháng 09/2026</b>. Nạp file Excel tháng mới để làm thật.`;
@@ -622,6 +789,8 @@ function bindEvents(){
   $("btnPrintOne").addEventListener("click",()=>{ let s=cur(); if(!s)return; $("print-area").innerHTML=phieuHTML(s); window.print(); });
   $("btnPrintAll").addEventListener("click",()=>{ let l=selectedList(); if(!l.length)return alert("Chưa có học sinh."); $("print-area").innerHTML=l.map(phieuHTML).join(""); window.print(); });
   $("btnPngOne").addEventListener("click",pngOfCurrent);
+  $("btnSendOne").addEventListener("click",guiEmNay);
+  $("btnCopyImg").addEventListener("click",copyPhieuImage);
   $("btnZipAll").addEventListener("click",zipAll);
   $("btnExcel").addEventListener("click",exportExcel);
   let doCopy=async()=>{ let s=cur(); if(!s)return;
@@ -629,34 +798,39 @@ function bindEvents(){
     alert(ok?`✅ Đã copy tin nhắn của ${s.fullName} — mở Zalo phụ huynh và dán.`:"❌ Không copy được, hãy bôi đen và copy tay."); };
   $("btnCopyZalo").addEventListener("click",doCopy);
   $("btnCopyZalo2").addEventListener("click",doCopy);
+  let copyPhone=async()=>{ let s=cur(); if(!s||!s.sdt) return alert("Em này chưa có SĐT — hãy nhập ở mục 6.");
+    let ok=await copyText(s.sdt);
+    alert(ok?`✅ Đã copy SĐT ${s.sdt} (PH em ${s.fullName}).`:"❌ Không copy được."); };
+  $("btnCopyPhone").addEventListener("click",copyPhone);
+  $("btnCopyPhone2").addEventListener("click",copyPhone);
+  $("phoneInput").addEventListener("change",()=>{
+    let s=cur(); if(!s) return;
+    s.sdt=normPhone($("phoneInput").value);
+    $("phoneInput").value=s.sdt;
+    if($("phoneInput").value===""&&s.sdt==="") $("phoneHint").textContent="SĐT chưa chuẩn (cần 10 số, bắt đầu bằng 0) — kiểm tra lại.";
+    renderList(); renderZalo();
+  });
 }
-function readFile(f){
-  $("fileInfo").textContent="⏳ Đang đọc "+f.name+" …";
-  let rd=new FileReader();
-  rd.onload=e=>{
-    try{ loadWorkbook(XLSX.read(new Uint8Array(e.target.result),{type:"array"}),f.name); }
-    catch(err){ $("fileInfo").innerHTML="❌ <b>"+esc(err.message)+"</b>"; }
-  };
-  rd.readAsArrayBuffer(f);
-}
+function readFile(f){ handleFile(f); }
 
 /* ---- Dữ liệu mẫu tháng 09/2026 (tên minh họa) ---- */
-function mkSample(stt,ho,ten,noidung,vals,tong,dadong,ghiChu){
+function mkSample(stt,ho,ten,noidung,vals,tong,dadong,ghiChu,sdt,tenPH){
   let s={stt,ho,ten,fullName:ho+" "+ten,noidung,hocphi:vals[0]||0,tienan:vals[1]||0,tieno:vals[2]||0,
     ansang:vals[3]||0,anchieu:vals[4]||0,busSC:vals[5]||0,busST:vals[6]||0,busSCT:vals[7]||0,busCuoiTuan:vals[8]||0,
-    tong:tong||0,ghiChu:ghiChu||"",thieuHP:0,duHP:0,thucThu:dadong||0,phaiThu:tong||0,daDong:dadong||0,selected:true};
+    tong:tong||0,ghiChu:ghiChu||"",sdt:sdt||"",tenPH:tenPH||"",thieuHP:0,duHP:0,thucThu:dadong||0,phaiThu:tong||0,daDong:dadong||0,selected:true};
   s._lastSum=sumKhoan(s);
   if(!s.tong) s.tong=s._lastSum;
   s.lech=(s.tong&&s._lastSum&&s.tong!==s._lastSum)?s.tong-s._lastSum:0;
   return s;
 }
 const SAMPLE=[
-  mkSample(1,"Nguyễn Văn","An","Học phí Bán trú lớp 12 tháng 09/2026 – Học kỳ I năm học 2026-2027",[11250000,1440000,0,0,1200000,0,2130000,0,0],16020000,0,""),
-  mkSample(2,"Trần Thị","Bình","Học phí Nội trú lớp 12 tháng 09/2026 – Học kỳ I năm học 2026-2027",[11250000,3390000,900000,0,0,0,0,0,1540000],17080000,0,""),
-  mkSample(3,"Lê Văn","Cường","Học phí Nội trú lớp 12 tháng 09/2026 – Học kỳ I năm học 2026-2027",[11250000,3390000,900000,0,0,0,0,0,0],15540000,15540000,"đóng rồi 14/9")
+  mkSample(1,"Nguyễn Văn","An","Học phí Bán trú lớp 12 tháng 09/2026 – Học kỳ I năm học 2026-2027",[11250000,1440000,0,0,1200000,0,2130000,0,0],16020000,0,"","0900000001","Nguyễn Văn A"),
+  mkSample(2,"Trần Thị","Bình","Học phí Nội trú lớp 12 tháng 09/2026 – Học kỳ I năm học 2026-2027",[11250000,3390000,900000,0,0,0,0,0,1540000],17080000,0,"","0900000002","Trần Văn B"),
+  mkSample(3,"Lê Văn","Cường","Học phí Nội trú lớp 12 tháng 09/2026 – Học kỳ I năm học 2026-2027",[11250000,3390000,900000,0,0,0,0,0,0],15540000,15540000,"đóng rồi 14/9","","")
 ];
 
 /* ================= INIT ================= */
+window.__setStudents = list => { students = list; curIndex = 0; if(!window._skippedNames) window._skippedNames = []; renderList(); renderPhieu(); };
 loadCfg(); updateYearBadge(); bindEvents();
 students=SAMPLE.map(s=>({...s})); renderList(); renderPhieu();
 $("fileInfo").innerHTML=`✨ Đang xem <b>dữ liệu mẫu tháng 09/2026</b>. Kéo-thả file Excel tháng mới vào ô trên để làm thật.`;
