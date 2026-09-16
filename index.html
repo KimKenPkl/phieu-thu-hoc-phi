@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phần mềm Thông báo Học phí — Trường THPT Chi Lăng</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --primary:#0b5cad; --primary-dark:#084a8c; --bg:#eef2f7; --card:#ffffff;
+    --border:#d7dee8; --text:#1e293b; --muted:#64748b; --accent-yellow:#ffeb00;
+    --success:#16a34a; --danger:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  header.topbar{background:linear-gradient(135deg,#0b5cad,#083d70);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+  header.topbar .logo{width:44px;height:44px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px}
+  header.topbar h1{font-size:18px;margin:0}
+  header.topbar p{margin:2px 0 0;font-size:12.5px;opacity:.9}
+  .layout{display:flex;gap:16px;padding:16px;max-width:1500px;margin:0 auto;align-items:flex-start}
+  .sidebar{width:380px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .card h3{margin:0 0 10px;font-size:15px;color:var(--primary);text-transform:uppercase;letter-spacing:.3px}
+  .dropzone{border:2px dashed var(--primary);border-radius:10px;padding:18px;text-align:center;background:#f0f7ff;cursor:pointer;transition:.15s}
+  .dropzone:hover,.dropzone.dragover{background:#dceeff;border-color:var(--primary-dark)}
+  .dropzone input{display:none}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:8px;padding:9px 14px;font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s;text-decoration:none}
+  .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+  .btn-success{background:var(--success);color:#fff}.btn-success:hover{filter:brightness(.92)}
+  .btn-outline{background:#fff;border:1px solid var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-sm{padding:6px 10px;font-size:12.5px}
+  .btn-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  label.f{display:block;font-size:12.5px;font-weight:600;margin:8px 0 3px;color:#334155}
+  input[type=text],input[type=date],input[type=number],textarea,select{width:100%;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13.5px;font-family:inherit;background:#fff}
+  input:focus,textarea:focus{outline:2px solid #bcd8f5;border-color:var(--primary)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .search{position:sticky;top:0;background:#fff;padding-bottom:8px}
+  .st-list{max-height:380px;overflow:auto;border:1px solid var(--border);border-radius:8px}
+  .st-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eef2f7;cursor:pointer;font-size:13.5px}
+  .st-item:hover{background:#f0f7ff}
+  .st-item.active{background:#dbeafe;border-left:4px solid var(--primary)}
+  .st-item .stt{width:32px;height:26px;background:#eef2f7;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+  .st-item.active .stt{background:var(--primary);color:#fff}
+  .st-item .money{margin-left:auto;font-weight:700;color:var(--primary);white-space:nowrap;font-size:12.5px}
+  .st-item .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .toolbar .spacer{flex:1}
+  .stat{background:#f0f7ff;border:1px solid #cfe3fa;border-radius:8px;padding:8px 12px;font-size:13px}
+  /* ===== PHIẾU THU ===== */
+  .phieu-wrap{display:flex;justify-content:center;background:#cbd5e1;padding:20px;border-radius:12px}
+  .phieu{background:#fff;width:800px;max-width:100%;font-family:"Times New Roman",Times,serif;color:#000;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:0}
+  .phieu table{border-collapse:collapse;width:100%;table-layout:fixed}
+  .phieu td{border:1px solid #000;padding:5px 8px;font-size:16px;line-height:1.35;vertical-align:middle;word-wrap:break-word}
+  .phieu .no-border td{border:none}
+  .phieu .b{font-weight:bold}
+  .phieu .center{text-align:center}
+  .phieu .right{text-align:right}
+  .phieu .head-company{font-weight:bold;font-size:17px}
+  .phieu .title{font-weight:bold;font-size:22px;text-align:center;letter-spacing:1px}
+  .phieu .yellow-box{background:#ffeb00;font-weight:bold;text-align:center;font-size:18px;min-width:70px}
+  .phieu .name-big{font-weight:bold;font-size:18px;text-align:center}
+  .phieu .total-row td{font-weight:bold;font-size:18px}
+  .phieu .sign-row td{font-weight:bold;text-align:center;font-size:16px}
+  .phieu .date-line{text-align:center;font-style:italic}
+  .editable{border-bottom:1px dashed #0b5cad !important;cursor:text}
+  input.cell-edit{width:100%;border:none;background:#fffbe6;font-family:inherit;font-size:inherit;text-align:inherit;padding:0}
+  input.cell-edit:focus{outline:1px solid var(--primary);background:#fff}
+  /* zalo preview */
+  .zalo-box{background:#e5f6ff;border:1px solid #bfe6fb;border-radius:12px;padding:12px;font-size:13.5px;white-space:pre-wrap;line-height:1.6}
+  .hint{font-size:12.5px;color:var(--muted);line-height:1.6}
+  .badge{display:inline-block;background:var(--primary);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:2px 9px}
+  .progress{height:8px;background:#e2e8f0;border-radius:6px;overflow:hidden;margin-top:8px;display:none}
+  .progress div{height:100%;background:var(--success);width:0%}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:18px}
+  @media(max-width:1100px){.layout{flex-direction:column}.sidebar{width:100%;position:static;max-height:none}}
+  /* ===== PRINT ===== */
+  #print-area{display:none}
+  @media print{
+    body{background:#fff}
+    header.topbar,.sidebar,.main .no-print,footer{display:none !important}
+    .layout{padding:0;max-width:none}
+    .main{width:100%}
+    #print-area{display:block !important}
+    .print-phieu{page-break-after:always;padding:10px}
+    .print-phieu:last-child{page-break-after:auto}
+    .print-phieu table{border-collapse:collapse;width:100%;table-layout:fixed}
+    .print-phieu td{border:1px solid #000;padding:5px 8px;font-family:"Times New Roman",Times,serif;color:#000;font-size:14px}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">🧾</div>
+  <div>
+    <h1>PHẦN MỀM THÔNG BÁO HỌC PHÍ — GỬI RIÊNG TỪNG PHỤ HUYNH</h1>
+    <p>Trường THPT Chi Lăng • Đọc file Excel tháng → xem phiếu từng em → In / Tải ảnh / Copy Zalo gửi riêng</p>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="card">
+      <h3>📂 1. Nạp file Excel tháng</h3>
+      <div class="dropzone" id="dropzone">
+        <div style="font-size:32px">📥</div>
+        <div style="font-weight:700">Kéo-thả file .xlsx vào đây<br>hoặc bấm để chọn file</div>
+        <div class="hint">Đúng form như <b>12A10.xlsx</b> (dòng tiêu đề có STT – HỌ – TÊN – Học phí…)</div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
+      </div>
+      <div id="fileInfo" class="hint" style="margin-top:8px">Chưa có file. Bạn có thể bấm “Dùng dữ liệu mẫu” để thử.</div>
+      <div class="btn-row">
+        <button class="btn btn-outline btn-sm" id="btnSample">✨ Dùng dữ liệu mẫu (12A10)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>⚙️ 2. Thông tin chung phiếu thu</h3>
+      <label class="f">Công ty</label><input type="text" id="cfgCompany" value="CÔNG TY CỔ PHẦN GIÁO DỤC ĐỨC BẢN">
+      <label class="f">Trường</label><input type="text" id="cfgSchool" value="TRƯỜNG THPT CHI LĂNG">
+      <label class="f">Địa chỉ</label><input type="text" id="cfgAddress" value="655 Trường Chinh, P. Hội Phú, Gia Lai">
+      <div class="grid3">
+        <div><label class="f">Quyển số</label><input type="text" id="cfgQuyen" value=""></div>
+        <div><label class="f">Nợ TK</label><input type="text" id="cfgNo" value="1111"></div>
+        <div><label class="f">Ngày thu</label><input type="date" id="cfgDate"></div>
+      </div>
+      <div class="grid2">
+        <div><label class="f">Người thu tiền</label><input type="text" id="cfgNguoiThu" value=""></div>
+        <div><label class="f">Kế toán trưởng</label><input type="text" id="cfgKeToan" value=""></div>
+      </div>
+      <label class="f">Giám đốc</label><input type="text" id="cfgGiamDoc" value="">
+      <label class="f">Lớp (tự nhận từ file)</label><input type="text" id="cfgLop" value="12A10">
+    </div>
+
+    <div class="card">
+      <h3>👨‍🎓 3. Danh sách học sinh <span class="badge" id="countBadge">0</span></h3>
+      <div class="search"><input type="text" id="searchInput" placeholder="🔍 Tìm tên học sinh…"></div>
+      <div class="btn-row" style="margin:0 0 8px">
+        <button class="btn btn-outline btn-sm" id="btnAll">Chọn hết</button>
+        <button class="btn btn-outline btn-sm" id="btnNone">Bỏ chọn</button>
+      </div>
+      <div class="st-list" id="stList"><div class="hint" style="padding:12px">Chưa có dữ liệu.</div></div>
+      <div class="stat" id="sumStat">Đã chọn: 0 em • Tổng: 0đ</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="card no-print">
+      <h3>🧾 4. Phiếu thu của học sinh đang chọn</h3>
+      <div class="toolbar">
+        <button class="btn btn-outline btn-sm" id="btnPrev">◀ Em trước</button>
+        <button class="btn btn-outline btn-sm" id="btnNext">Em sau ▶</button>
+        <span class="hint" id="curInfo"></span>
+        <span class="spacer"></span>
+        <button class="btn btn-primary btn-sm" id="btnPrintOne">🖨️ In phiếu này</button>
+        <button class="btn btn-success btn-sm" id="btnPngOne">🖼️ Tải ảnh phiếu này</button>
+        <button class="btn btn-outline btn-sm" id="btnCopyZalo">📋 Copy tin nhắn Zalo</button>
+      </div>
+      <div class="hint">💡 Bấm trực tiếp vào <b>số tiền / họ tên / lý do</b> trên phiếu để sửa nhanh cho từng em trước khi gửi. Số tiền bằng chữ tự nhảy theo.</div>
+    </div>
+
+    <div class="phieu-wrap no-print">
+      <div class="phieu" id="phieuPreview"><!-- render by JS --></div>
+    </div>
+
+    <div class="card no-print">
+      <h3>💬 5. Tin nhắn Zalo gửi riêng phụ huynh (xem trước)</h3>
+      <div class="zalo-box" id="zaloPreview">—</div>
+      <div class="btn-row">
+        <button class="btn btn-primary btn-sm" id="btnCopyZalo2">📋 Copy tin nhắn</button>
+      </div>
+      <label class="f">Mẫu tin nhắn (có thể sửa — dùng {ten}, {lop}, {lydo}, {tong}, {chitiet}, {bangchu}, {ngay})</label>
+      <textarea id="zaloTemplate" rows="6">Kính gửi Quý phụ huynh em {ten} – Lớp {lop}!
+Trường THPT Chi Lăng thông báo học phí {lydo}:
+{chitiet}
+👉 TỔNG CỘNG: {tong} ({bangchu}).
+Kính mong Quý phụ huynh hoàn thành giúp nhà trường. Trân trọng cảm ơn!
+(GVCN – {ngay})</textarea>
+    </div>
+
+    <div class="card no-print">
+      <h3>📦 6. Gửi hàng loạt (in / tải cả lớp)</h3>
+      <div class="toolbar">
+        <button class="btn btn-primary" id="btnPrintAll">🖨️ In tất cả em đã chọn</button>
+        <button class="btn btn-success" id="btnZipAll">🖼️ Tải ZIP ảnh từng em đã chọn</button>
+      </div>
+      <div class="progress" id="zipProgress"><div></div></div>
+      <div class="hint" id="zipStatus" style="margin-top:6px"></div>
+      <div class="hint" style="margin-top:8px">
+        <b>Quy trình gửi riêng mỗi tháng:</b> 1) Nạp file Excel tháng mới → 2) Kiểm tra từng phiếu (sửa nếu cần) →
+        3) Bấm <b>Tải ZIP ảnh</b> → được 50 ảnh <i>PhieuThu_03_NgoVoNgocAnh.png</i>… →
+        4) Mở Zalo từng phụ huynh, gửi ảnh + dán tin nhắn đã Copy. Hoặc bấm <b>In tất cả</b> để in giấy phát cho HS.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="print-area"></div>
+<footer>Phần mềm nội bộ GVCN 12A10 — Trường THPT Chi Lăng • Dữ liệu chỉ xử lý trên máy, không gửi đi đâu.</footer>
+
+<script>
+/* ================= STATE ================= */
+let students = [];      // {stt,ho,ten,fullName,noidung,hocphi,tienan,tieno,ansang,anchieu,busSC,busST,busSCT,busCuoiTuan,tong,ghiChu,thieuHP,duHP,thucThu,phaiThu,selected}
+let curIndex = 0;
+const $ = id => document.getElementById(id);
+
+/* ================= HELPERS ================= */
+function num(v){
+  if(v===null||v===undefined||v==="") return 0;
+  if(typeof v==="number") return isFinite(v)?v:0;
+  let s=String(v).trim().replace(/[₫đ\s]/gi,"").replace(/\./g,"").replace(/,/g,"");
+  // giữ trường hợp "22/6" (ngày) -> coi như 0
+  if(/[^0-9\-]/.test(s)) return 0;
+  let n=parseFloat(s); return isFinite(n)?n:0;
+}
+function fmt(v){
+  let n=num(v);
+  if(!n) return "-";
+  return n.toLocaleString("vi-VN");
+}
+function fmtZalo(v){ let n=num(v); return n? n.toLocaleString("vi-VN")+"đ" : "0đ"; }
+function esc(s){ return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ---- Đọc số tiền bằng chữ (chuẩn tiếng Việt) ---- */
+const CHU=["không","một","hai","ba","bốn","năm","sáu","bảy","tám","chín"];
+function doc3(n, full){
+  let tram=Math.floor(n/100), chuc=Math.floor((n%100)/10), don=n%10, s="";
+  if(!full && tram===0&&chuc===0&&don===0) return "";
+  if(tram!==0){ s+=CHU[tram]+" trăm"; if(chuc===0&&don!==0) s+=" lẻ"; }
+  else if(full){ s+="không trăm"; if(chuc===0&&don!==0) s+=" lẻ"; }
+  if(chuc!==0){
+    if(chuc===1) s+=(s?" ":"")+"mười";
+    else s+=(s?" ":"")+CHU[chuc]+" mươi";
+    if(don!==0){
+      if(don===1) s+=(chuc>1?" mốt":" một");
+      else if(don===4) s+=(chuc>1?" tư":" bốn");
+      else if(don===5) s+=" lăm";
+      else s+=" "+CHU[don];
+    }
+  } else if(don!==0 && (tram!==0||full)){ s+=" "+(don===5?"lăm":CHU[don]); }
+  else if(don!==0){ s+=CHU[don]; }
+  return s.trim();
+}
+function soThanhChu(n){
+  n=Math.round(num(n));
+  if(n===0) return "Không đồng";
+  const DV=[""," nghìn"," triệu"," tỷ"," nghìn tỷ"," triệu tỷ"];
+  let groups=[], tmp=n, i=0;
+  while(tmp>0){ groups.push({v:tmp%1000,i:i}); tmp=Math.floor(tmp/1000); i++; }
+  let maxI=Math.max(...groups.map(g=>g.i));
+  groups.sort((a,b)=>b.i-a.i);
+  let parts=groups.filter(g=>g.v!==0).map(g=>doc3(g.v, g.i!==maxI)+DV[g.i]);
+  let s=parts.join(" ").replace(/\s+/g," ").trim();
+  return s.charAt(0).toUpperCase()+s.slice(1)+" đồng";
+}
+function ngayStr(){
+  let d=$("cfgDate").value;
+  if(!d){ let t=new Date(); d=t.toISOString().slice(0,10); }
+  let [y,m,dd]=d.split("-");
+  return {text:`Ngày ${dd} Tháng ${m} Năm ${y}`, short:`${dd}/${m}/${y}`};
+}
+function cur(){ return students[curIndex]; }
+
+/* ================= PARSE EXCEL ================= */
+function findHeaderRow(rows){
+  for(let r=0;r<Math.min(rows.length,12);r++){
+    let line=rows[r].map(x=>String(x??"").toLowerCase());
+    let hasSTT=line.some(x=>x.includes("stt"));
+    let hasHo=line.some(x=>x.trim()==="họ"||x.includes("họ"));
+    let hasHP=line.some(x=>x.includes("học phí"));
+    if(hasSTT&&hasHo&&hasHP) return r;
+  }
+  return -1;
+}
+function colIndex(header, keys){
+  header=header.map(h=>String(h??"").toLowerCase().replace(/\s+/g," ").trim());
+  for(let k of keys){ let i=header.findIndex(h=>h.includes(k)); if(i>=0) return i; }
+  return -1;
+}
+function parseRows(rows){
+  let hr=findHeaderRow(rows);
+  if(hr<0) throw new Error("Không tìm thấy dòng tiêu đề (STT – HỌ – TÊN – Học phí). Hãy dùng đúng form 12A10.xlsx");
+  let header=rows[hr];
+  let c={
+    stt:colIndex(header,["stt"]),
+    ho:colIndex(header,["họ","ho "]),
+    ten:header.findIndex(h=>String(h??"").trim().toLowerCase()==="tên"),
+    noidung:colIndex(header,["nội dung","ly do","lý do"]),
+    hocphi:colIndex(header,["tiền học phí","hoc phi"]).valueOf(),
+    tienan:-1,tieno:-1,ansang:-1,anchieu:-1,busSC:-1,busST:-1,busSCT:-1,busCuoi:-1,tong:-1,ghichu:-1,thieu:-1,du:-1,thuc:-1,phai:-1
+  };
+  // vì header có nhiều cột trùng "học phí", map theo vị trí chuẩn form: D..S
+  // fallback: dùng vị trí cột chuẩn của form (A=0..)
+  c.noidung=c.noidung<0?3:c.noidung;
+  c.hocphi=4; c.tienan=5; c.tieno=6; c.ansang=7; c.anchieu=8;
+  c.busSC=9; c.busST=10; c.busSCT=11; c.busCuoi=12;
+  c.tong=colIndex(header,["tổng tiền","tong tien"]); if(c.tong<0)c.tong=13;
+  c.ghichu=colIndex(header,["ghi chú","ghi chu"]); if(c.ghichu<0)c.ghichu=14;
+  // Thiếu HP / Dư HP / THỰC THU / PHẢI THU
+  let hlow=header.map(h=>String(h??"").toLowerCase());
+  c.thieu=hlow.findIndex(h=>h.includes("thiếu")); if(c.thieu<0)c.thieu=15;
+  c.du=hlow.findIndex(h=>h.includes("dư")); if(c.du<0)c.du=16;
+  c.thuc=hlow.findIndex(h=>h.includes("thực thu")); if(c.thuc<0)c.thuc=17;
+  c.phai=hlow.findIndex(h=>h.includes("phải thu")); if(c.phai<0)c.phai=18;
+  if(c.ten<0)c.ten=2;
+  let out=[];
+  for(let r=hr+1;r<rows.length;r++){
+    let row=rows[r];
+    if(!row) continue;
+    let stt=row[c.stt], ho=row[c.ho], ten=row[c.ten];
+    if((stt===null||stt===""||stt===undefined)&&( !ho&&!ten)) continue;
+    if(!ho&&!ten) continue;
+    let sttN=parseInt(stt); if(!isFinite(sttN)) continue;
+    // bỏ dòng trống học phí = 0 và không có nội dung (VD STT 2, 16 trong file mẫu)
+    let tong=num(row[c.tong]);
+    let nd=String(row[c.noidung]??"").trim();
+    if(tong===0&&!nd) continue;
+    let full=(String(ho??"").trim()+" "+String(ten??"").trim()).replace(/\s+/g," ").trim();
+    out.push({
+      stt:sttN, ho:String(ho??"").trim(), ten:String(ten??"").trim(), fullName:full,
+      noidung:nd||("Học phí lớp "+$("cfgLop").value),
+      hocphi:num(row[c.hocphi]), tienan:num(row[c.tienan]), tieno:num(row[c.tieno]),
+      ansang:num(row[c.ansang]), anchieu:num(row[c.anchieu]),
+      busSC:num(row[c.busSC]), busST:num(row[c.busST]), busSCT:num(row[c.busSCT]), busCuoiTuan:num(row[c.busCuoi]),
+      tong:tong|| (num(row[c.hocphi])+num(row[c.tienan])+num(row[c.tieno])+num(row[c.ansang])+num(row[c.anchieu])+num(row[c.busSC])+num(row[c.busST])+num(row[c.busSCT])+num(row[c.busCuoi])),
+      ghiChu:String(row[c.ghichu]??"").trim(),
+      thieuHP:num(row[c.thieu]), duHP:num(row[c.du]),
+      thucThu:num(row[c.thuc]), phaiThu:num(row[c.phai]),
+      daDong:num(row[c.thuc]), selected:true
+    });
+  }
+  out.sort((a,b)=>a.stt-b.stt);
+  return out;
+}
+function loadWorkbook(wb, fname){
+  // ưu tiên sheet có chữ DANH SÁCH hoặc sheet đầu có header
+  let target=null, parsed=null;
+  for(let name of wb.SheetNames){
+    let ws=wb.Sheets[name];
+    let rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:true});
+    // bỏ các cột template phiếu thu (U..AA) nếu lẫn: chỉ lấy 19 cột đầu A..S
+    rows=rows.map(r=>r.slice(0,19));
+    try{ let p=parseRows(rows); if(p.length>0){ target=name; parsed=p; break; } }catch(e){}
+  }
+  if(!parsed) throw new Error("Không đọc được danh sách HS. File phải có các cột STT, HỌ, TÊN, Học phí…");
+  students=parsed; curIndex=0;
+  // đoán tên lớp từ tiêu đề sheet
+  let ws0=wb.Sheets[wb.SheetNames[0]];
+  let a1=String(ws0["A1"]?ws0["A1"].v:"");
+  let m=a1.match(/12A\d+|10A\d+|11A\d+/);
+  if(m) $("cfgLop").value=m[0];
+  $("fileInfo").innerHTML=`✅ Đã nạp <b>${esc(fname)}</b> — sheet <b>${esc(target)}</b> — nhận <b>${students.length}</b> học sinh.`;
+  saveCfg(); renderList(); renderPhieu();
+}
+
+/* ================= RENDER LIST ================= */
+function filtered(){
+  let q=$("searchInput").value.toLowerCase().trim();
+  return students.map((s,i)=>({...s,_i:i})).filter(s=>!q||s.fullName.toLowerCase().includes(q)||String(s.stt)===q);
+}
+function renderList(){
+  let list=$("stList"); let f=filtered();
+  if(!f.length){ list.innerHTML=`<div class="hint" style="padding:12px">Không tìm thấy.</div>`; }
+  else list.innerHTML=f.map(s=>`
+    <div class="st-item ${s._i===curIndex?"active":""}" data-i="${s._i}">
+      <input type="checkbox" data-chk="${s._i}" ${s.selected?"checked":""} title="Chọn để in/tải hàng loạt">
+      <span class="stt">${s.stt}</span>
+      <span class="name"><b>${esc(s.fullName)}</b><br><span class="hint">${esc(s.noidung.slice(0,40))}</span></span>
+      <span class="money">${fmt(s.tong)}</span>
+    </div>`).join("");
+  list.querySelectorAll(".st-item").forEach(el=>{
+    el.addEventListener("click",e=>{
+      if(e.target.matches("input[type=checkbox]")) return;
+      curIndex=parseInt(el.dataset.i); renderList(); renderPhieu();
+    });
+  });
+  list.querySelectorAll("input[data-chk]").forEach(chk=>{
+    chk.addEventListener("change",e=>{
+      e.stopPropagation();
+      students[parseInt(chk.dataset.chk)].selected=chk.checked;
+      updateStat();
+    });
+  });
+  $("countBadge").textContent=students.length;
+  updateStat();
+}
+function updateStat(){
+  let sel=students.filter(s=>s.selected);
+  let sum=sel.reduce((a,s)=>a+num(s.tong),0);
+  $("sumStat").textContent=`Đã chọn: ${sel.length}/${students.length} em • Tổng: ${sum.toLocaleString("vi-VN")}đ`;
+}
+function selectedList(){ let l=students.filter(s=>s.selected); return l.length?l:(cur()? [cur()]:[]); }
+
+/* ================= RENDER PHIẾU ================= */
+function moneyCell(field, val){
+  return `<input class="cell-edit" style="text-align:right;font-weight:inherit" data-f="${field}" value="${num(val)?num(val).toLocaleString("vi-VN"):"-"}">`;
+}
+function renderPhieu(){
+  let s=cur();
+  if(!s){ $("phieuPreview").innerHTML=`<div class="hint" style="padding:30px">Chưa có dữ liệu. Hãy nạp file Excel.</div>`; $("zaloPreview").textContent="—"; return; }
+  $("curInfo").textContent=`STT ${s.stt} • ${s.fullName} • Tổng ${fmt(s.tong)}`;
+  let ngay=ngayStr();
+  $("phieuPreview").innerHTML=`
+  <table>
+    <tr>
+      <td colspan="3" class="head-company">CÔNG TY CỔ PHẦN GIÁO DỤC ĐỨC BẢN</td>
+      <td colspan="2">Quyển số: ${esc($("cfgQuyen").value||"……………")}</td>
+    </tr>
+    <tr>
+      <td colspan="3" class="head-company">${esc($("cfgSchool").value)}</td>
+      <td colspan="1">Số:</td>
+      <td colspan="1" class="yellow-box" style="background:#ffeb00">${s.stt}</td>
+    </tr>
+    <tr>
+      <td colspan="3">${esc($("cfgAddress").value)}</td>
+      <td colspan="2">Nợ: ${esc($("cfgNo").value||"1111")}</td>
+    </tr>
+    <tr><td colspan="5" class="title">PHIẾU THU</td></tr>
+    <tr>
+      <td colspan="1">Họ tên người nộp tiền:</td>
+      <td colspan="4" class="name-big"><input class="cell-edit name-big" style="text-align:center;font-weight:bold;font-size:18px;font-family:'Times New Roman'" data-f="fullName" value="${esc(s.fullName)}"></td>
+    </tr>
+    <tr>
+      <td colspan="1">Lý do nộp tiền</td>
+      <td colspan="4" class="center"><input class="cell-edit" style="text-align:center;font-family:'Times New Roman';font-size:16px" data-f="noidung" value="${esc(s.noidung)}"></td>
+    </tr>
+    <tr><td>Tiền học phí</td><td class="right">${moneyCell("hocphi",s.hocphi)}</td><td></td><td>Xe bus Sáng - Chiều</td><td class="right">${moneyCell("busSC",s.busSC)}</td></tr>
+    <tr><td>Tiền ăn</td><td class="right">${moneyCell("tienan",s.tienan)}</td><td></td><td>Xe bus Sáng - Tối</td><td class="right">${moneyCell("busST",s.busST)}</td></tr>
+    <tr><td>Tiền ở</td><td class="right">${moneyCell("tieno",s.tieno)}</td><td></td><td>Xe bus Sáng - Chiều - Tối</td><td class="right">${moneyCell("busSCT",s.busSCT)}</td></tr>
+    <tr><td>Tiền Ăn sáng</td><td class="right">${moneyCell("ansang",s.ansang)}</td><td></td><td>Xe bus Cuối tuần</td><td class="right">${moneyCell("busCuoiTuan",s.busCuoiTuan)}</td></tr>
+    <tr><td>Tiền Ăn chiều</td><td class="right">${moneyCell("anchieu",s.anchieu)}</td><td></td><td></td><td></td></tr>
+    <tr class="total-row"><td>Tổng số tiền</td><td class="right" id="cellTong">${fmt(s.tong)}</td><td></td><td></td><td></td></tr>
+    <tr><td>Phụ huynh đã đóng</td><td class="right">${moneyCell("daDong",s.daDong)}</td><td></td><td></td><td></td></tr>
+    <tr><td>Còn thiếu</td><td class="right" id="cellThieu">${fmt(num(s.tong)-num(s.daDong))}</td><td></td><td></td><td></td></tr>
+    <tr><td>Số tiền bằng chữ</td><td colspan="4" class="b" id="cellChu">${soThanhChu(s.tong)}</td></tr>
+    <tr><td colspan="2">Kèm theo: …………… chứng từ gốc</td><td></td><td colspan="2" class="date-line">${ngay.text}</td></tr>
+    <tr class="sign-row"><td>Người nộp tiền</td><td>Người thu tiền</td><td>Kế toán trưởng</td><td colspan="2">Giám đốc</td></tr>
+    <tr style="height:56px"><td></td><td class="center" style="font-size:13px">${esc($("cfgNguoiThu").value)}</td><td class="center" style="font-size:13px">${esc($("cfgKeToan").value)}</td><td colspan="2" class="center" style="font-size:13px">${esc($("cfgGiamDoc").value)}</td></tr>
+  </table>`;
+  // bind edit
+  $("phieuPreview").querySelectorAll("input[data-f]").forEach(inp=>{
+    inp.addEventListener("change",()=>{
+      let f=inp.dataset.f, v=inp.value.trim();
+      if(f==="fullName"){ s.fullName=v; let p=v.split(" "); s.ten=p.pop()||""; s.ho=p.join(" "); }
+      else if(f==="noidung"){ s.noidung=v; }
+      else { s[f]=num(v); recalc(s); }
+      renderPhieu(); renderList();
+    });
+  });
+  renderZalo();
+}
+function recalc(s){
+  // nếu tổng đang = 0 thì tự cộng lại các khoản
+  let sum=num(s.hocphi)+num(s.tienan)+num(s.tieno)+num(s.ansang)+num(s.anchieu)+num(s.busSC)+num(s.busST)+num(s.busSCT)+num(s.busCuoiTuan);
+  if(sum>0 && (num(s.tong)===0)) s.tong=sum;
+  // nếu người dùng sửa khoản mà tổng cũ = tổng các khoản cũ -> tự cập nhật tổng mới (tiện nhất cho GVCN)
+  // đơn giản: nút ngầm — luôn giữ tổng = sum nếu chênh do sửa? -> chỉ auto khi tick? Ta auto luôn cho khớp phiếu:
+  // (GVCN vẫn sửa tổng tay được? Ở bản này tổng auto = sum các khoản để khỏi lệch. Còn thiếu = tổng - đã đóng)
+  s.tong=sum>0?sum:num(s.tong);
+}
+
+/* ================= ZALO MESSAGE ================= */
+function chiTietZalo(s){
+  let rows=[
+    ["Học phí",s.hocphi],["Tiền ăn",s.tienan],["Tiền ở",s.tieno],
+    ["Ăn sáng",s.ansang],["Ăn chiều",s.anchieu],
+    ["Xe bus Sáng-Chiều",s.busSC],["Xe bus Sáng-Tối",s.busST],
+    ["Xe bus Sáng-Chiều-Tối",s.busSCT],["Xe bus Cuối tuần",s.busCuoiTuan]
+  ].filter(([k,v])=>num(v)>0);
+  if(!rows.length) return "(Chưa có chi tiết)";
+  return rows.map(([k,v])=>`• ${k}: ${fmt(v)}`).join("\n");
+}
+function zaloText(s){
+  let ngay=ngayStr();
+  let t=$("zaloTemplate").value;
+  return t.replaceAll("{ten}",s.fullName).replaceAll("{lop}",$("cfgLop").value)
+    .replaceAll("{lydo}",s.noidung).replaceAll("{tong}",fmtZalo(s.tong))
+    .replaceAll("{bangchu}",soThanhChu(s.tong)).replaceAll("{chitiet}",chiTietZalo(s))
+    .replaceAll("{ngay}",ngay.short);
+}
+function renderZalo(){ let s=cur(); if(!s) return; $("zaloPreview").textContent=zaloText(s); }
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true; }
+  catch(e){ let ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");return true;}catch(_){return false;} finally{ta.remove();} }
+}
+
+/* ================= PRINT ================= */
+function phieuHTML(s){
+  let ngay=ngayStr();
+  return `<div class="print-phieu"><table>
+    <tr><td colspan="3"><b>CÔNG TY CỔ PHẦN GIÁO DỤC ĐỨC BẢN</b></td><td colspan="2">Quyển số: ${esc($("cfgQuyen").value||"……………")}</td></tr>
+    <tr><td colspan="3"><b>${esc($("cfgSchool").value)}</b></td><td colspan="1">Số:</td><td colspan="1" style="background:#ffeb00;text-align:center;font-weight:bold">${s.stt}</td></tr>
+    <tr><td colspan="3">${esc($("cfgAddress").value)}</td><td colspan="2">Nợ: ${esc($("cfgNo").value||"1111")}</td></tr>
+    <tr><td colspan="5" style="text-align:center;font-weight:bold;font-size:20px">PHIẾU THU</td></tr>
+    <tr><td>Họ tên người nộp tiền:</td><td colspan="4" style="text-align:center;font-weight:bold;font-size:17px">${esc(s.fullName)}</td></tr>
+    <tr><td>Lý do nộp tiền</td><td colspan="4" style="text-align:center">${esc(s.noidung)}</td></tr>
+    <tr><td>Tiền học phí</td><td style="text-align:right">${fmt(s.hocphi)}</td><td></td><td>Xe bus Sáng - Chiều</td><td style="text-align:right">${fmt(s.busSC)}</td></tr>
+    <tr><td>Tiền ăn</td><td style="text-align:right">${fmt(s.tienan)}</td><td></td><td>Xe bus Sáng - Tối</td><td style="text-align:right">${fmt(s.busST)}</td></tr>
+    <tr><td>Tiền ở</td><td style="text-align:right">${fmt(s.tieno)}</td><td></td><td>Xe bus Sáng - Chiều - Tối</td><td style="text-align:right">${fmt(s.busSCT)}</td></tr>
+    <tr><td>Tiền Ăn sáng</td><td style="text-align:right">${fmt(s.ansang)}</td><td></td><td>Xe bus Cuối tuần</td><td style="text-align:right">${fmt(s.busCuoiTuan)}</td></tr>
+    <tr><td>Tiền Ăn chiều</td><td style="text-align:right">${fmt(s.anchieu)}</td><td></td><td></td><td></td></tr>
+    <tr><td><b>Tổng số tiền</b></td><td style="text-align:right"><b>${fmt(s.tong)}</b></td><td></td><td></td><td></td></tr>
+    <tr><td>Phụ huynh đã đóng</td><td style="text-align:right">${fmt(s.daDong)}</td><td></td><td></td><td></td></tr>
+    <tr><td>Còn thiếu</td><td style="text-align:right">${fmt(num(s.tong)-num(s.daDong))}</td><td></td><td></td><td></td></tr>
+    <tr><td>Số tiền bằng chữ</td><td colspan="4"><b>${soThanhChu(s.tong)}</b></td></tr>
+    <tr><td colspan="2">Kèm theo: …………… chứng từ gốc</td><td></td><td colspan="2" style="text-align:center;font-style:italic">${ngay.text}</td></tr>
+    <tr><td style="text-align:center;font-weight:bold">Người nộp tiền</td><td style="text-align:center;font-weight:bold">Người thu tiền</td><td style="text-align:center;font-weight:bold">Kế toán trưởng</td><td colspan="2" style="text-align:center;font-weight:bold">Giám đốc</td></tr>
+    <tr style="height:60px"><td></td><td style="text-align:center;font-size:12px">${esc($("cfgNguoiThu").value)}</td><td style="text-align:center;font-size:12px">${esc($("cfgKeToan").value)}</td><td colspan="2" style="text-align:center;font-size:12px">${esc($("cfgGiamDoc").value)}</td></tr>
+  </table></div>`;
+}
+
+/* ================= PNG / ZIP ================= */
+function fileName(s){ return `PhieuThu_${String(s.stt).padStart(2,"0")}_${s.fullName.normalize("NFC").replace(/\s+/g,"")}.png`; }
+async function pngOfCurrent(){
+  let s=cur(); if(!s) return;
+  $("zipStatus").textContent="⏳ Đang tạo ảnh…";
+  await document.fonts.ready;
+  let canvas=await html2canvas($("phieuPreview"),{scale:2,backgroundColor:"#ffffff",useCORS:true});
+  let a=document.createElement("a");
+  a.download=fileName(s); a.href=canvas.toDataURL("image/png"); a.click();
+  $("zipStatus").textContent="✅ Đã tải "+a.download;
+}
+async function zipAll(){
+  let list=selectedList();
+  if(!list.length){ alert("Chưa chọn học sinh nào."); return; }
+  if(typeof JSZip==="undefined"){ alert("Chưa tải được thư viện ZIP (cần mạng). Hãy dùng nút In thay thế."); return; }
+  let bar=$("zipProgress"); bar.style.display="block"; let fill=bar.firstElementChild;
+  let zip=new JSZip(); let keep=curIndex;
+  $("zipStatus").textContent=`⏳ Đang tạo ${list.length} ảnh… (đừng tắt trang)`;
+  await document.fonts.ready;
+  for(let k=0;k<list.length;k++){
+    let s=list[k];
+    curIndex=students.indexOf(s); renderPhieu();
+    await new Promise(r=>setTimeout(r,60));
+    let canvas=await html2canvas($("phieuPreview"),{scale:2,backgroundColor:"#ffffff",useCORS:true});
+    let blob=await new Promise(r=>canvas.toBlob(r,"image/png"));
+    zip.file(fileName(s),blob);
+    fill.style.width=Math.round((k+1)/list.length*100)+"%";
+    $("zipStatus").textContent=`⏳ ${k+1}/${list.length} — ${s.fullName}`;
+  }
+  $("zipStatus").textContent="⏳ Đang nén ZIP…";
+  let blob=await zip.generateAsync({type:"blob"});
+  let a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`PhieuThu_${$("cfgLop").value}_${ngayStr().short.replaceAll("/","-")}.zip`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  curIndex=keep; renderPhieu();
+  $("zipStatus").textContent=`✅ Xong! Đã tải ${list.length} ảnh trong file ZIP. Giải nén rồi gửi riêng từng ảnh cho từng phụ huynh qua Zalo.`;
+}
+
+/* ================= CONFIG PERSIST ================= */
+function saveCfg(){
+  let o={}; ["cfgCompany","cfgSchool","cfgAddress","cfgQuyen","cfgNo","cfgDate","cfgNguoiThu","cfgKeToan","cfgGiamDoc","cfgLop","zaloTemplate"].forEach(id=>o[id]=$(id).value);
+  try{localStorage.setItem("phieuthu_cfg",JSON.stringify(o));}catch(e){}
+}
+function loadCfg(){
+  try{
+    let o=JSON.parse(localStorage.getItem("phieuthu_cfg")||"{}");
+    Object.keys(o).forEach(id=>{ if($(id)) $(id).value=o[id]; });
+  }catch(e){}
+  if(!$("cfgDate").value){ $("cfgDate").value=new Date().toISOString().slice(0,10); }
+}
+
+/* ================= EVENTS ================= */
+function bindEvents(){
+  let dz=$("dropzone"), fi=$("fileInput");
+  dz.addEventListener("click",()=>fi.click());
+  fi.addEventListener("change",()=>{ if(fi.files[0]) readFile(fi.files[0]); });
+  ["dragover","dragenter"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add("dragover");}));
+  ["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove("dragover");}));
+  dz.addEventListener("drop",e=>{ let f=e.dataTransfer.files[0]; if(f) readFile(f); });
+  $("btnSample").addEventListener("click",()=>{
+    students=SAMPLE; curIndex=0;
+    $("fileInfo").innerHTML=`✨ Đang dùng <b>dữ liệu mẫu</b> (3 em trích từ 12A10.xlsx). Hãy nạp file tháng mới để làm thật.`;
+    $("cfgLop").value="12A10"; renderList(); renderPhieu();
+  });
+  $("searchInput").addEventListener("input",renderList);
+  $("btnAll").addEventListener("click",()=>{students.forEach(s=>s.selected=true);renderList();});
+  $("btnNone").addEventListener("click",()=>{students.forEach(s=>s.selected=false);renderList();});
+  $("btnPrev").addEventListener("click",()=>{ if(!students.length)return; curIndex=(curIndex-1+students.length)%students.length; renderList(); renderPhieu(); });
+  $("btnNext").addEventListener("click",()=>{ if(!students.length)return; curIndex=(curIndex+1)%students.length; renderList(); renderPhieu(); });
+  ["cfgCompany","cfgSchool","cfgAddress","cfgQuyen","cfgNo","cfgDate","cfgNguoiThu","cfgKeToan","cfgGiamDoc","cfgLop"].forEach(id=>$(id).addEventListener("input",()=>{saveCfg();renderPhieu();}));
+  $("zaloTemplate").addEventListener("input",()=>{saveCfg();renderZalo();});
+  $("btnPrintOne").addEventListener("click",()=>{ let s=cur(); if(!s)return; $("print-area").innerHTML=phieuHTML(s); window.print(); });
+  $("btnPrintAll").addEventListener("click",()=>{ let l=selectedList(); if(!l.length)return alert("Chưa có học sinh."); $("print-area").innerHTML=l.map(phieuHTML).join(""); window.print(); });
+  $("btnPngOne").addEventListener("click",pngOfCurrent);
+  $("btnZipAll").addEventListener("click",zipAll);
+  let doCopy=async()=>{ let s=cur(); if(!s)return; let ok=await copyText(zaloText(s)); alert(ok?"✅ Đã copy tin nhắn Zalo của "+s.fullName+" — mở Zalo phụ huynh và dán (Ctrl+V).":"❌ Không copy được, hãy bôi đen và copy tay."); };
+  $("btnCopyZalo").addEventListener("click",doCopy);
+  $("btnCopyZalo2").addEventListener("click",doCopy);
+}
+function readFile(f){
+  $("fileInfo").textContent="⏳ Đang đọc "+f.name+" …";
+  let rd=new FileReader();
+  rd.onload=e=>{
+    try{
+      let wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+      loadWorkbook(wb,f.name);
+    }catch(err){ $("fileInfo").innerHTML="❌ <b>"+esc(err.message)+"</b>"; }
+  };
+  rd.readAsArrayBuffer(f);
+}
+
+/* ---- Dữ liệu mẫu (tên minh họa, không phải HS thật) ---- */
+const SAMPLE=[
+  {stt:1,ho:"Nguyễn Văn",ten:"An",fullName:"Nguyễn Văn An",noidung:"Học phí Bán trú lớp 12 hè năm học 2026 - 2027",hocphi:11250000,tienan:1440000,tieno:0,ansang:0,anchieu:1200000,busSC:0,busST:2130000,busSCT:0,busCuoiTuan:0,tong:16020000,ghiChu:"",thieuHP:0,duHP:0,thucThu:0,phaiThu:16020000,daDong:0,selected:true},
+  {stt:2,ho:"Trần Thị",ten:"Bình",fullName:"Trần Thị Bình",noidung:"Học phí Nội trú lớp 12 hè năm học 2026 - 2027",hocphi:11250000,tienan:3390000,tieno:900000,ansang:0,anchieu:0,busSC:0,busST:0,busSCT:0,busCuoiTuan:1540000,tong:17080000,ghiChu:"",thieuHP:0,duHP:0,thucThu:0,phaiThu:17080000,daDong:0,selected:true},
+  {stt:3,ho:"Lê Văn",ten:"Cường",fullName:"Lê Văn Cường",noidung:"Học phí Nội trú lớp 12 hè năm học 2026 - 2027",hocphi:11250000,tienan:3390000,tieno:900000,ansang:0,anchieu:0,busSC:0,busST:0,busSCT:0,busCuoiTuan:0,tong:15540000,ghiChu:"đóng rồi 14/6",thieuHP:0,duHP:0,thucThu:15540000,phaiThu:15540000,daDong:15540000,selected:true}
+];
+
+/* ================= INIT ================= */
+loadCfg(); bindEvents();
+students=SAMPLE.slice(); renderList(); renderPhieu();
+$("fileInfo").innerHTML=`✨ Đang xem <b>dữ liệu mẫu</b>. Kéo-thả file <b>12A10.xlsx tháng mới</b> vào ô trên để làm thật.`;
+</script>
+</body>
+</html>
